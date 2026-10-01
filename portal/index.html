@@ -90,6 +90,8 @@ h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .tag.rec { background: var(--ok-soft); color: var(--ok); }
 .tag.risco { background: var(--warn-soft); color: var(--warn); }
 .thumb .titulo { font-size: 0.86rem; font-weight: 500; }
+.thumb details.leg summary { font-size: 0.76rem; color: var(--muted); cursor: pointer; }
+.thumb details.leg pre { white-space: pre-wrap; font: inherit; font-size: 0.78rem; line-height: 1.45; margin: 6px 0 0; }
 button.copia { align-self: flex-start; font: inherit; font-size: 0.76rem; font-weight: 600; color: var(--accent); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 3px 10px; cursor: pointer; }
 button.copia:hover, button.copia:focus-visible { border-color: var(--accent); outline: none; }
 .botoes { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -163,7 +165,16 @@ function destrava(raw) {
     return fetch('m.bin', { cache: 'no-store' });
   }).then(function (r) { return r.arrayBuffer(); }).then(abre).then(function (buf) {
     V = JSON.parse(new TextDecoder().decode(buf)).videos;
-    V.sort(function (a, b) { return a.pronto < b.pronto ? 1 : -1; });
+    // mais novo primeiro; os episódios de uma série ficam juntos, em ordem de número, na posição do mais novo deles
+    var ep = function (v) { var m = /· EP (\d+)/.exec(v.serie); return m ? +m[1] : 0; };
+    var grupo = function (v) { return ep(v) ? v.serie.split(' · EP')[0] : v.id; };
+    var topo = {};
+    V.forEach(function (v) { var g = grupo(v); if (!topo[g] || v.pronto > topo[g]) topo[g] = v.pronto; });
+    V.sort(function (a, b) {
+      var ga = grupo(a), gb = grupo(b);
+      if (ga !== gb) return topo[ga] !== topo[gb] ? (topo[ga] < topo[gb] ? 1 : -1) : (ga < gb ? -1 : 1);
+      return ep(a) - ep(b);
+    });
     guarda.set('rco-k', toB64(raw));
     document.getElementById('lock').hidden = true;
     document.getElementById('lock').style.display = 'none';
@@ -225,8 +236,11 @@ function detalhe(v) {
     h += '<div class="thumb' + (vertical(v) ? ' vertical' : '') + '"><a data-enc="' + esc(t.src) + '" target="_blank" rel="noopener">' + foto(t.src) + '</a><div class="meta">' +
       (t.tag ? '<span class="tag' + cls + '">' + esc(t.tag) + '</span>' : '') +
       (t.titulo ? '<div class="titulo" id="tt' + i + '">' + esc(t.titulo) + '</div>' : '') +
-      '<div class="botoes"><a class="baixa" data-enc="' + esc(t.src) + '" download="' + esc(t.arquivo) + '">Baixar</a>' +
-      (t.titulo ? '<button class="copia" type="button" data-alvo="tt' + i + '">Copiar título</button>' : '') + '</div>' +
+      '<div class="botoes"><a class="baixa" data-enc="' + esc(t.src) + '" download="' + esc(t.arquivo) + '">' + (t.video ? 'Baixar capa' : 'Baixar') + '</a>' +
+      (t.video ? '<a class="baixa" href="' + esc(t.video) + '" target="_blank" rel="noopener noreferrer">Baixar vídeo</a>' : '') +
+      (t.texto ? '<button class="copia" type="button" data-alvo="lg' + i + '">Copiar legenda</button>' :
+        (t.titulo ? '<button class="copia" type="button" data-alvo="tt' + i + '">Copiar título</button>' : '')) + '</div>' +
+      (t.texto ? '<details class="leg"><summary>Ver legenda</summary><pre id="lg' + i + '">' + esc(t.texto) + '</pre></details>' : '') +
       '</div></div>';
   });
   h += '</div>';
