@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Portal de vídeos RCO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Newsreader:ital,opsz,wght@1,6..72,500&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* layout: lista de vídeos ordenada pela hora em que ficou pronto; ao abrir, a página completa do vídeo no mesmo lugar */
+:root {
+  --bg: #f4f5f8;
+  --card: #ffffff;
+  --fg: #12131a;
+  --muted: #5d6273;
+  --line: #e1e3ea;
+  --accent: #2f62e3;
+  --accent-soft: #e6edfd;
+  --ok: #157a3d;
+  --ok-soft: #e3f4ea;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0dd;
+  --code-bg: #f7f8fb;
+  --font-body: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Newsreader', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0d12; --card: #16171d; --fg: #eef0f5; --muted: #9aa0b2; --line: #262833;
+    --accent: #6f95f5; --accent-soft: #1a2442; --ok: #4cc27a; --ok-soft: #12291c; --warn: #e5a53b; --warn-soft: #2c2213; --code-bg: #111218;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c0d12; --card: #16171d; --fg: #eef0f5; --muted: #9aa0b2; --line: #262833;
+  --accent: #6f95f5; --accent-soft: #1a2442; --ok: #4cc27a; --ok-soft: #12291c; --warn: #e5a53b; --warn-soft: #2c2213; --code-bg: #111218;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.5; padding-inline: 16px; padding-block: 0 56px; }
+.wrap { max-width: 1060px; margin: 0 auto; }
+header.topo { padding-block: 28px 16px; border-bottom: 1px solid var(--line); }
+h1 { font-size: clamp(1.6rem, 3.6vw, 2.3rem); font-weight: 800; letter-spacing: -0.03em; margin: 0; text-wrap: balance; }
+h1 em { font-family: var(--font-serif); font-weight: 500; font-style: italic; color: var(--accent); letter-spacing: -0.01em; }
+.lead { color: var(--muted); max-width: 66ch; margin: 8px 0 0; font-size: 0.95rem; }
+.resumo { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 0.88rem; color: var(--muted); }
+.resumo b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.lista { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
+.item { display: grid; grid-template-columns: 220px minmax(0, 1fr) auto; gap: 18px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; text-decoration: none; color: inherit; }
+.item:hover, .item:focus-visible { border-color: var(--accent); outline: none; }
+.item .capa { aspect-ratio: 16 / 9; border-radius: 9px; overflow: hidden; background: var(--line); display: grid; place-items: center; }
+.item .capa img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.item .capa.vertical img { object-fit: contain; }
+.item .txt { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.serie { margin: 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+.item h2 { margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.25; }
+.linha { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.quando { text-align: right; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.quando b { display: block; font-size: 1rem; color: var(--fg); font-variant-numeric: tabular-nums; }
+.estado { display: inline-block; font-size: 0.76rem; font-weight: 600; border-radius: 999px; padding: 1px 10px; }
+.estado.pub { background: var(--accent-soft); color: var(--accent); }
+.estado.pronto { background: var(--ok-soft); color: var(--ok); }
+.estado.novo { background: var(--warn-soft); color: var(--warn); }
+.voltar { display: inline-flex; gap: 6px; align-items: center; margin-top: 22px; color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+.det-topo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 360px); gap: 22px; margin-top: 14px; align-items: start; }
+.det-topo h2 { margin: 2px 0 0; font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; text-wrap: balance; }
+.det-topo .sub { margin: 4px 0 0; font-family: var(--font-serif); font-style: italic; font-size: 1.1rem; color: var(--muted); }
+.ficha { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 14px 0 0; }
+.ficha div { display: flex; flex-direction: column; }
+.ficha dt { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); }
+.ficha dd { margin: 0; font-weight: 600; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+.nota { margin: 12px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 62ch; }
+.acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.btn { text-decoration: none; font-weight: 600; font-size: 0.88rem; border-radius: 9px; padding: 8px 14px; border: 1px solid var(--line); color: var(--fg); background: var(--card); }
+.btn.forte { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn:hover, .btn:focus-visible { border-color: var(--accent); outline: none; }
+.det-capa { aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: var(--line); display: grid; place-items: center; }
+.det-capa img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.det-capa.vertical img { object-fit: contain; }
+h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin: 30px 0 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.thumb { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.thumb a { display: block; aspect-ratio: 16 / 9; background: var(--line); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb.vertical a { aspect-ratio: 9 / 16; }
+.thumb .meta { padding: 9px 11px 11px; display: flex; flex-direction: column; gap: 6px; }
+.tag { align-self: flex-start; font-size: 0.7rem; font-weight: 600; border-radius: 999px; padding: 1px 9px; background: var(--line); color: var(--muted); }
+.tag.rec { background: var(--ok-soft); color: var(--ok); }
+.tag.risco { background: var(--warn-soft); color: var(--warn); }
+.thumb .titulo { font-size: 0.86rem; font-weight: 500; }
+button.copia { align-self: flex-start; font: inherit; font-size: 0.76rem; font-weight: 600; color: var(--accent); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 3px 10px; cursor: pointer; }
+button.copia:hover, button.copia:focus-visible { border-color: var(--accent); outline: none; }
+.botoes { display: flex; flex-wrap: wrap; gap: 6px; }
+a.baixa { font-size: 0.76rem; font-weight: 600; text-decoration: none; color: #fff; background: var(--accent); border: 1px solid var(--accent); border-radius: 8px; padding: 3px 12px; }
+a.baixa:hover, a.baixa:focus-visible { filter: brightness(1.08); outline: 2px solid var(--accent); outline-offset: 2px; }
+.abas { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.abas button { font: inherit; font-size: 0.82rem; font-weight: 600; border: 1px solid var(--line); background: var(--card); color: var(--fg); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.abas button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.secao { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; min-width: 0; }
+.secao header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.secao h4 { margin: 0; font-size: 0.92rem; font-weight: 700; }
+.secao pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.55; background: var(--code-bg); border-radius: 8px; padding: 10px 12px; max-height: 340px; overflow: auto; }
+.rodape { margin-top: 30px; font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+.rodape a { color: var(--accent); }
+@media (max-width: 760px) {
+  .item { grid-template-columns: 120px minmax(0, 1fr); }
+  .item .quando { grid-column: 2; text-align: left; }
+  .det-topo { grid-template-columns: minmax(0, 1fr); }
+}
+#lock { min-height: 100vh; display: grid; place-items: center; padding: 24px 0; }
+.lock-card { width: 100%; max-width: 380px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 28px 24px; }
+.lock-card h1 { font-size: 1.5rem; }
+.lock-card p { color: var(--muted); font-size: 0.9rem; margin: 6px 0 18px; }
+.lock-card input { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+.lock-card input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.lock-card button { width: 100%; margin-top: 10px; font: inherit; font-weight: 600; padding: 10px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+.lock-card .erro { color: #d64545; font-size: 0.85rem; min-height: 1.3em; margin: 8px 0 0; }
+img.cifrada { opacity: 0; transition: opacity .2s; }
+img.cifrada.ok { opacity: 1; }
+</style>
+</head>
+<body>
+<main id="lock">
+  <form class="lock-card" id="lockForm" autocomplete="off">
+    <h1>Portal de vídeos <em>RCO</em></h1>
+    <p>Use a mesma senha da página de vídeos.</p>
+    <input type="password" id="senha" placeholder="Senha" aria-label="Senha" autofocus>
+    <button type="submit" id="entrar">Entrar</button>
+    <p class="erro" id="erro" role="alert"></p>
+  </form>
+</main>
+
+<div class="wrap" id="app" hidden>
+  <header class="topo">
+    <h1>Portal de vídeos <em>RCO</em></h1>
+    <p class="lead">Os vídeos prontos, do mais novo para o mais antigo. Abra um vídeo para baixar o arquivo, a legenda e as thumbs (botão Baixar em cada uma) e copiar o título e o texto do YouTube.</p>
+    <div class="resumo" id="resumo"></div>
+  </header>
+  <main id="vista"></main>
+  <p class="rodape">Os links de download do vídeo e da legenda valem até <b>07/10, 21h</b> (horário de Brasília). Depois disso, peça links novos e eu atualizo o portal. As thumbs baixam direto daqui.</p>
+</div>
+
+<script>
+var V = [];
+var chave = null;
+var imgs = {};
+var fromB64 = function (s) { return Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), function (c) { return c.charCodeAt(0); }); };
+var toB64 = function (u8) { return btoa(String.fromCharCode.apply(null, u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+var guarda = { get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} } };
+function abre(buf) { var u8 = new Uint8Array(buf); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8.slice(0, 12) }, chave, u8.slice(12)); }
+function deriva(senha) {
+  return fetch('k.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (k) {
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveBits']).then(function (b) {
+      return crypto.subtle.deriveBits({ name: 'PBKDF2', salt: fromB64(k.sal), iterations: k.iter, hash: 'SHA-256' }, b, 256);
+    });
+  }).then(function (bits) { return new Uint8Array(bits); });
+}
+function destrava(raw) {
+  return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']).then(function (k) {
+    chave = k;
+    return fetch('m.bin', { cache: 'no-store' });
+  }).then(function (r) { return r.arrayBuffer(); }).then(abre).then(function (buf) {
+    V = JSON.parse(new TextDecoder().decode(buf)).videos;
+    V.sort(function (a, b) { return a.pronto < b.pronto ? 1 : -1; });
+    guarda.set('rco-k', toB64(raw));
+    document.getElementById('lock').hidden = true;
+    document.getElementById('lock').style.display = 'none';
+    document.getElementById('app').hidden = false;
+    resumo();
+    render();
+  });
+}
+function imagem(src) {
+  if (!imgs[src]) imgs[src] = fetch(src).then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(abre)
+    .then(function (b) { return URL.createObjectURL(new Blob([b], { type: 'image/jpeg' })); });
+  return imgs[src];
+}
+function hidrata() {
+  document.querySelectorAll('[data-enc]').forEach(function (el) {
+    imagem(el.getAttribute('data-enc')).then(function (u) {
+      if (el.tagName === 'IMG') { el.src = u; el.classList.add('ok'); } else el.href = u;
+    });
+  });
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function vertical(v) { return v.formato.indexOf('9:16') === 0; }
+function foto(src, alt) { return '<img class="cifrada" data-enc="' + esc(src) + '" alt="' + esc(alt || '') + '">'; }
+function copiar(btn, texto, alvo) {
+  function ok() { var o = btn.textContent; btn.textContent = 'Copiado'; setTimeout(function () { btn.textContent = o; }, 1400); }
+  function sel() { if (!alvo) return; var r = document.createRange(); r.selectNodeContents(alvo); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selecionado: copie'; }
+  try { navigator.clipboard.writeText(texto).then(ok, sel); } catch (e) { sel(); }
+}
+function resumo() {
+  var pub = V.filter(function (v) { return v.cls === 'pub'; }).length;
+  document.getElementById('resumo').innerHTML = '<span><b>' + V.length + '</b> vídeos</span><span><b>' + pub + '</b> publicado' + (pub === 1 ? '' : 's') + '</span><span><b>' + (V.length - pub) + '</b> esperando você postar ou aprovar</span>';
+}
+function lista() {
+  var h = '<div class="lista">';
+  V.forEach(function (v) {
+    var capa = v.thumbs.length ? v.thumbs[0].src : '';
+    h += '<a class="item" href="#' + esc(v.id) + '"><div class="capa' + (vertical(v) ? ' vertical' : '') + '">' + (capa ? foto(capa) : '') + '</div>' +
+      '<div class="txt"><p class="serie">' + esc(v.serie) + '</p><h2>' + esc(v.titulo) + '</h2>' +
+      '<div class="linha"><span class="estado ' + esc(v.cls) + '">' + esc(v.estado) + '</span><span>' + esc(v.dur) + '</span><span>' + esc(v.canal) + '</span></div></div>' +
+      '<div class="quando">pronto em<b>' + esc(v.pronto_txt.replace(' às ', ', ')) + '</b></div></a>';
+  });
+  return h + '</div>';
+}
+function detalhe(v) {
+  var capa = v.thumbs.length ? v.thumbs[0].src : '';
+  var h = '<a class="voltar" href="#">← Todos os vídeos</a>';
+  h += '<div class="det-topo"><div><p class="serie">' + esc(v.serie) + '</p><h2>' + esc(v.titulo) + '</h2><p class="sub">' + esc(v.sub) + '</p>' +
+    '<dl class="ficha"><div><dt>Estado</dt><dd><span class="estado ' + esc(v.cls) + '">' + esc(v.estado) + '</span></dd></div>' +
+    '<div><dt>Pronto em</dt><dd>' + esc(v.pronto_txt) + '</dd></div><div><dt>Duração</dt><dd>' + esc(v.dur) + '</dd></div>' +
+    '<div><dt>Formato</dt><dd>' + esc(v.formato) + '</dd></div><div><dt>Destino</dt><dd>' + esc(v.canal) + '</dd></div></dl>' +
+    '<p class="nota">' + esc(v.nota) + '</p><div class="acoes">' +
+    '<a class="btn forte" href="' + esc(v.video) + '" target="_blank" rel="noopener noreferrer">Baixar o vídeo</a>' +
+    (v.legenda ? '<a class="btn" href="' + esc(v.legenda) + '" target="_blank" rel="noopener noreferrer">Baixar a legenda (.srt)</a>' : '') +
+    '<a class="btn" href="' + esc(v.pagina) + '" target="_blank" rel="noopener noreferrer">Página no Backblaze</a></div></div>' +
+    '<div class="det-capa' + (vertical(v) ? ' vertical' : '') + '">' + (capa ? foto(capa, 'Thumb de ' + v.titulo) : '') + '</div></div>';
+  h += '<h3>Thumbs (' + v.thumbs.length + ')</h3><div class="grid">';
+  v.thumbs.forEach(function (t, i) {
+    var cls = /Recomendada|Nova/.test(t.tag) ? ' rec' : (/fora do vídeo/.test(t.tag) ? ' risco' : '');
+    h += '<div class="thumb' + (vertical(v) ? ' vertical' : '') + '"><a data-enc="' + esc(t.src) + '" target="_blank" rel="noopener">' + foto(t.src) + '</a><div class="meta">' +
+      (t.tag ? '<span class="tag' + cls + '">' + esc(t.tag) + '</span>' : '') +
+      (t.titulo ? '<div class="titulo" id="tt' + i + '">' + esc(t.titulo) + '</div>' : '') +
+      '<div class="botoes"><a class="baixa" data-enc="' + esc(t.src) + '" download="' + esc(t.arquivo) + '">Baixar</a>' +
+      (t.titulo ? '<button class="copia" type="button" data-alvo="tt' + i + '">Copiar título</button>' : '') + '</div>' +
+      '</div></div>';
+  });
+  h += '</div>';
+  if (v.textos.length) {
+    h += '<h3>Texto para o YouTube</h3><div class="abas" role="group" aria-label="Idioma">';
+    v.textos.forEach(function (t, i) { h += '<button type="button" data-aba="' + i + '" aria-pressed="' + (i === 0) + '">' + esc(t[0]) + '</button>'; });
+    h += '</div>';
+    v.textos.forEach(function (t, i) {
+      h += '<div class="aba" data-painel="' + i + '"' + (i ? ' hidden' : '') + '>';
+      t[1].forEach(function (s, j) {
+        var id = 'sx' + i + '_' + j;
+        h += '<section class="secao"><header><h4>' + esc(s.nome) + '</h4><button class="copia" type="button" data-alvo="' + id + '">Copiar</button></header><pre id="' + id + '">' + esc(s.texto) + '</pre></section>';
+      });
+      h += '</div>';
+    });
+  }
+  return h;
+}
+function render() {
+  if (!chave) return;
+  var id = location.hash.replace('#', '');
+  var v = V.filter(function (x) { return x.id === id; })[0];
+  document.getElementById('vista').innerHTML = v ? detalhe(v) : lista();
+  hidrata();
+  if (v) window.scrollTo(0, 0);
+}
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('button.copia');
+  if (b) { var alvo = document.getElementById(b.getAttribute('data-alvo')); copiar(b, alvo.textContent, alvo); return; }
+  var a = e.target.closest('.abas button');
+  if (a) {
+    var n = a.getAttribute('data-aba');
+    document.querySelectorAll('.abas button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === a)); });
+    document.querySelectorAll('.aba').forEach(function (p) { p.hidden = p.getAttribute('data-painel') !== n; });
+  }
+});
+window.addEventListener('hashchange', render);
+document.getElementById('lockForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var bt = document.getElementById('entrar');
+  var erro = document.getElementById('erro');
+  erro.textContent = '';
+  bt.disabled = true;
+  bt.textContent = 'Abrindo…';
+  deriva(document.getElementById('senha').value).then(destrava).catch(function () {
+    erro.textContent = 'Senha errada.';
+  }).then(function () { bt.disabled = false; bt.textContent = 'Entrar'; });
+});
+// link direto da página de vídeos (#k=…) ou a chave que ela guardou nesta aba
+(function () {
+  var m = location.hash.match(/k=([A-Za-z0-9_-]+)/);
+  var k = m ? m[1] : guarda.get('rco-k');
+  if (m) history.replaceState(null, '', location.pathname + location.search);
+  if (k) destrava(fromB64(k)).catch(function () {});
+})();
+</script>
+</body>
+</html>
