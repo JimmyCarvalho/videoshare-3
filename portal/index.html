@@ -153,11 +153,20 @@ var toB64 = function (u8) { return btoa(String.fromCharCode.apply(null, u8)).rep
 var guarda = { get: function (k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} } };
 function abre(buf) { var u8 = new Uint8Array(buf); return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8.slice(0, 12) }, chave, u8.slice(12)); }
 function deriva(senha) {
+  var w = null;
   return fetch('k.json', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (k) {
+    w = k.w;
     return crypto.subtle.importKey('raw', new TextEncoder().encode(senha), 'PBKDF2', false, ['deriveBits']).then(function (b) {
       return crypto.subtle.deriveBits({ name: 'PBKDF2', salt: fromB64(k.sal), iterations: k.iter, hash: 'SHA-256' }, b, 256);
     });
-  }).then(function (bits) { return new Uint8Array(bits); });
+  }).then(function (bits) {
+    if (!w) return new Uint8Array(bits);
+    // com "w", a senha abre a chave dos vídeos guardada cifrada no k.json: trocar a senha não exige recifrar os vídeos
+    var u8 = fromB64(w);
+    return crypto.subtle.importKey('raw', bits, 'AES-GCM', false, ['decrypt']).then(function (wk) {
+      return crypto.subtle.decrypt({ name: 'AES-GCM', iv: u8.slice(0, 12) }, wk, u8.slice(12));
+    }).then(function (raw) { return new Uint8Array(raw); });
+  });
 }
 function destrava(raw) {
   return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']).then(function (k) {
